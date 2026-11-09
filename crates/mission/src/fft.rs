@@ -40,12 +40,13 @@ impl std::ops::DerefMut for Aligned {
 
 pub struct RealFft {
     n: usize,
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     log2n: u32,
     re: Aligned,
     im: Aligned,
     #[cfg(target_os = "macos")]
     setup: *mut std::ffi::c_void,
-    #[cfg(not(target_os = "macos"))]
+    #[cfg_attr(target_os = "macos", allow(dead_code))]
     twiddle: Vec<(f32, f32)>,
 }
 
@@ -75,21 +76,21 @@ impl RealFft {
     pub fn new(n: usize) -> Self {
         assert!(n.is_power_of_two() && n >= 4);
         let log2n = n.trailing_zeros();
+        let h = n / 2;
+        let twiddle = (0..h)
+            .map(|k| {
+                let a = -2.0 * std::f64::consts::PI * k as f64 / n as f64;
+                (a.cos() as f32, a.sin() as f32)
+            })
+            .collect();
         #[cfg(target_os = "macos")]
         {
             let setup = unsafe { vdsp::vDSP_create_fftsetup(log2n as usize, 0) };
             assert!(!setup.is_null(), "vDSP_create_fftsetup failed");
-            Self { n, log2n, re: Aligned::new(n / 2), im: Aligned::new(n / 2), setup }
+            Self { n, log2n, re: Aligned::new(h), im: Aligned::new(h), setup, twiddle }
         }
         #[cfg(not(target_os = "macos"))]
         {
-            let h = n / 2;
-            let twiddle = (0..h)
-                .map(|k| {
-                    let a = -2.0 * std::f64::consts::PI * k as f64 / n as f64;
-                    (a.cos() as f32, a.sin() as f32)
-                })
-                .collect();
             Self { n, log2n, re: Aligned::new(h), im: Aligned::new(h), twiddle }
         }
     }
@@ -123,9 +124,14 @@ impl RealFft {
         }
     }
 
-    /// Portable version of vDSP's packed real FFT.
     #[cfg(not(target_os = "macos"))]
     fn transform(&mut self, x: &mut [f32], dir: i32) {
+        self.transform_portable(x, dir);
+    }
+
+    /// Portable version of vDSP's packed real FFT (Linux, Windows).
+    #[cfg_attr(target_os = "macos", allow(dead_code))]
+    fn transform_portable(&mut self, x: &mut [f32], dir: i32) {
         let n = self.n;
         let h = n / 2;
         let w = |k: usize, tw: &[(f32, f32)]| {
@@ -155,26 +161,27 @@ impl RealFft {
                 x[2 * k + 1] = ei - tr;
             }
         } else {
-            // Inverse of the above, unscaled (vDSP leaves the scaling to the caller).
+            // vDSP's unscaled inverse: x[n] = Σ_k Y[k]·e^{+2πikn/N} over the
+            // Hermitian spectrum Y. With z[m] = x[2m] + i·x[2m+1]:
+            // Z[k] = (Y[k] + conj Y[h−k]) + i·(Y[k] − conj Y[h−k])·e^{+2πik/N},
+            // z = the unscaled inverse complex FFT of Z (size h).
             let (dc, ny) = (x[0], x[1]);
-            self.re[0] = (dc + ny) * 0.5;
-            self.im[0] = (dc - ny) * 0.5;
-            for k in 1..h {
-                let (xr, xi) = (x[2 * k], x[2 * k + 1]);
-                let (yr, yi) = (x[2 * (h - k)], -x[2 * (h - k) + 1]);
-                let (yr, yi) = if h - k == 0 { (dc, 0.0) } else { (yr, yi) };
-                let (er, ei) = ((xr + yr) * 0.5, (xi + yi) * 0.5);
-                let (dr, di) = ((xr - yr) * 0.5, (xi - yi) * 0.5);
-                let (c, s) = w(k, &self.twiddle);
-                // i·conj(W)·D
-                let (tr, ti) = (dr * c + di * s, di * c - dr * s);
-                self.re[k] = er - ti;
-                self.im[k] = ei + tr;
+            for k in 0..h {
+                let (yr, yi) = if k == 0 { (dc, 0.0) } else { (x[2 * k], x[2 * k + 1]) };
+                let j = h - k;
+                let (cr, ci) = if j == h { (ny, 0.0) } else { (x[2 * j], -x[2 * j + 1]) };
+                let (er, ei) = (yr + cr, yi + ci);
+                let (dr, di) = (yr - cr, yi - ci);
+                let (c, s) = self.twiddle[k];
+                // e^{+2πik/N} = (c, −s)
+                let (or_, oi) = (dr * c + di * s, di * c - dr * s);
+                self.re[k] = er - oi;
+                self.im[k] = ei + or_;
             }
             complex_fft(&mut self.re, &mut self.im, true);
             for k in 0..h {
-                x[2 * k] = 2.0 * self.re[k];
-                x[2 * k + 1] = 2.0 * self.im[k];
+                x[2 * k] = self.re[k];
+                x[2 * k + 1] = self.im[k];
             }
         }
     }
@@ -188,7 +195,7 @@ impl Drop for RealFft {
 }
 
 /// In-place iterative radix-2 complex FFT (unscaled).
-#[cfg(not(target_os = "macos"))]
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 fn complex_fft(re: &mut [f32], im: &mut [f32], inverse: bool) {
     let n = re.len();
     let mut j = 0;
@@ -249,6 +256,25 @@ mod tests {
         f.inverse(&mut y);
         for (a, b) in x.iter().zip(&y) {
             assert!((a - b).abs() < 1e-5);
+        }
+    }
+
+    /// The portable transform (what Linux and Windows run) against vDSP.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn portable_matches_vdsp() {
+        for &n in &[16usize, 256, 4096] {
+            let mut f = RealFft::new(n);
+            let x: Vec<f32> = (0..n).map(|i| ((i * 7919 % 101) as f32 - 50.0) * 0.013 + (i as f32 * 0.05).sin()).collect();
+            for dir in [1, -1] {
+                let (mut a, mut b) = (x.clone(), x.clone());
+                f.transform(&mut a, dir);
+                f.transform_portable(&mut b, dir);
+                let peak = a.iter().fold(0.0f32, |m, v| m.max(v.abs()));
+                for (i, (p, q)) in a.iter().zip(&b).enumerate() {
+                    assert!((p - q).abs() <= 1e-5 * peak, "n {n} dir {dir} [{i}]: vDSP {p} portable {q}");
+                }
+            }
         }
     }
 }

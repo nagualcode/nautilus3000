@@ -41,9 +41,22 @@ two outputs are compared float for float. They match. See
 
 ## Installing
 
-The plug-ins build as **AU** (macOS), **VST3** and **CLAP**, plus a
-standalone app each. Until release builds are published, build them yourself
-(see [Building](#building)):
+**Download** the latest build from
+[Releases](https://github.com/nagualcode/nautilus3000/releases) (or from the
+artifacts of the *Release* workflow under Actions):
+
+| Platform | Formats | Files |
+|---|---|---|
+| macOS (Apple Silicon) | AU, VST3, CLAP, standalone apps, CLI renderers | one `.pkg` installer per plug-in, or `nautilus3000-<version>-macos-arm64.zip` |
+| Linux (x86_64) | CLAP, VST3, LV2, standalones, CLIs | `.tar.gz` with `install.sh`, or the `.zip` |
+| Windows (x64) | CLAP, VST3, standalones, CLIs | `.exe` installer, or the `.zip` |
+
+The macOS builds are signed ad hoc but not notarised: after copying bundles
+from the zip, clear the quarantine flag, e.g.
+`xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/Periscope3K.component`
+(or right-click ▸ Open the installer). Intel Macs: build from source.
+
+**Or build them yourself** (see [Building](#building)):
 
 ```bash
 cargo truce install --au2 --user        # AU only, into ~/Library/Audio/Plug-Ins/Components
@@ -424,8 +437,13 @@ modern editors and themes.
 
 ## Building
 
-Requirements: Rust 1.85+, macOS 12+ (Linux and Windows builds are untested so
-far), and [`cargo-truce`](https://github.com/truce-audio/truce).
+Requirements: Rust 1.85+ and [`cargo-truce`](https://github.com/truce-audio/truce);
+macOS 12+, Linux (X11/ALSA dev packages, see `.github/workflows/release.yml`)
+or Windows. On macOS the FFT is Apple's vDSP (as in the original); elsewhere a
+portable FFT with the same layout and scaling, tested against vDSP.
+CI (`.github/workflows/ci.yml`) runs the tests on macOS and Linux and validates
+all three plug-ins with auval, pluginval and clap-validator; tagging `v*` runs
+`release.yml`, which builds and attaches the binaries for all three platforms.
 
 ```bash
 cargo test --release                                   # unit + plug-in tests

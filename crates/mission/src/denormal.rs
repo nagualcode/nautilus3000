@@ -17,15 +17,12 @@ pub fn flush_denormals(on: bool) -> bool {
     }
     #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
     unsafe {
-        #[cfg(target_arch = "x86")]
-        use std::arch::x86::{_mm_getcsr, _mm_setcsr};
-        #[cfg(target_arch = "x86_64")]
-        use std::arch::x86_64::{_mm_getcsr, _mm_setcsr};
-        #[allow(deprecated)]
-        let csr = _mm_getcsr();
+        // MXCSR bit 15 = flush to zero, bit 6 = denormals are zero.
+        let mut csr: u32 = 0;
+        std::arch::asm!("stmxcsr [{}]", in(reg) &mut csr, options(nostack));
         let was = csr & 0x8040 != 0;
-        #[allow(deprecated)]
-        _mm_setcsr(if on { csr | 0x8040 } else { csr & !0x8040 });
+        let new = if on { csr | 0x8040 } else { csr & !0x8040 };
+        std::arch::asm!("ldmxcsr [{}]", in(reg) &new, options(nostack));
         was
     }
     #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64", target_arch = "x86")))]
@@ -47,5 +44,22 @@ impl DenormalFlush {
 impl Drop for DenormalFlush {
     fn drop(&mut self) {
         flush_denormals(self.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flushes_and_restores() {
+        let tiny = std::hint::black_box(1.0e-38f32);
+        let was = flush_denormals(true);
+        let flushed = std::hint::black_box(tiny) * std::hint::black_box(0.01f32);
+        flush_denormals(false);
+        let kept = std::hint::black_box(tiny) * std::hint::black_box(0.01f32);
+        flush_denormals(was);
+        assert_eq!(flushed, 0.0);
+        assert!(kept > 0.0);
     }
 }
