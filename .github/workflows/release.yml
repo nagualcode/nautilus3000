@@ -169,15 +169,9 @@ jobs:
       run:
         shell: bash
     steps:
-      # Sparse checkout: `reference/` holds Mac OS 9 files named `Icon\r`
-      # (custom folder icons), which are illegal NTFS paths. The build only
-      # needs the crates (root files come along in cone mode).
+      # (The Mac OS 9 `Icon\r` metadata files are not tracked: a path with a
+      # control character makes git refuse the whole checkout on Windows.)
       - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            crates
-            plugins
-          sparse-checkout-cone-mode: true
 
       - uses: dtolnay/rust-toolchain@stable
 

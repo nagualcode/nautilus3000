@@ -207,8 +207,13 @@ impl Filter {
             let nlin = (352.0 - lo) / step;
             let lin = nlin.floor() as i32;
             let mut i = 0;
+            // At low sample rates `lin` can pass 31: the original then writes
+            // past its 32 edges (the 33rd float of "freqs" and beyond), which
+            // nothing reads. Only the 32 edges are kept here.
             while i < lin {
-                self.freqs[i as usize] = i as f32 * step + lo;
+                if (i as usize) < BANDS {
+                    self.freqs[i as usize] = i as f32 * step + lo;
+                }
                 i += 1;
             }
             while i < 0x1f {
@@ -261,7 +266,11 @@ fn thumbs_to_spectrum(freqs: &[f32; BANDS], gains: &[f32; BANDS], out: &mut [f32
         if 1.0 < x {
             break;
         }
-        out[i] = gains[0];
+        // (The original can write one float past the 4096 when a band edge
+        // other than the last sits exactly at Nyquist; dropped here.)
+        if i < out.len() {
+            out[i] = gains[0];
+        }
         i += 2;
         if !((i as f32) / nf < x) {
             break;
@@ -273,7 +282,9 @@ fn thumbs_to_spectrum(freqs: &[f32; BANDS], gains: &[f32; BANDS], out: &mut [f32
             return;
         }
         loop {
-            out[i] = gains[j + 1];
+            if i < out.len() {
+                out[i] = gains[j + 1];
+            }
             i += 2;
             if !((i as f32) / nf < x) {
                 break;
@@ -445,5 +456,23 @@ mod tests {
         let lo = 0.5 * (f.freqs[5] + f.freqs[6]);
         assert!(f.gain_at(mid) < 0.05, "{}", f.gain_at(mid));
         assert!((f.gain_at(lo) - 1.0).abs() < 0.05);
+    }
+}
+
+#[cfg(test)]
+mod low_rate {
+    use super::*;
+    #[test]
+    fn needle_sweep() {
+        for sr in [8000.0, 11025.0, 22050.0, 44100.0, 192000.0] {
+            for lo in (5..=408).step_by(7) {
+                for hi in (175..=412).step_by(5) {
+                    let mut f = Filter::new(sr);
+                    let mut c = Controls { low: lo as f32, high: hi as f32, faders: [100; BANDS] };
+                    let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f.update(&mut c)));
+                    assert!(r.is_ok(), "sr {sr} lo {lo} hi {hi}");
+                }
+            }
+        }
     }
 }

@@ -5,3 +5,4 @@ target/
 *.aiff
 *.f32
 __pycache__/
+Icon
