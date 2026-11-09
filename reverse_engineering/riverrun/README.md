@@ -16,14 +16,16 @@ of `Riverrun.vst` 2.6.4 (`original_binaries/Riverrun-2.6.4-VST-i386`).
 | `decompiled/Riverrun-2.6.4-i386.c` | Ghidra 12.2 decompilation of every function (44 838 lines) |
 | `decompiled/symbols.txt` | `nm -n` symbol table, demangled |
 | `decompiled/import_stubs.txt` | `__IMPORT,__jump_table` stub → imported function |
-| `tools/DecompileAll.java` | Ghidra headless post-script that wrote the `.c` file |
-| `tools/macho.py` | Minimal Mach-O reader: read constants and tables at virtual addresses |
-| `tools/extract_function.py` | Print functions from the decompilation by address or name |
-| `tools/binhex.py` | BinHex 4.0 decoder (for `Nautilus_Bundle.hqx`) |
-| `tools/pef_unpack_data.py` | Expands the pattern-initialised data section of a PEF (OS 9 build) |
+| `../tools/DecompileAll.java` | Ghidra headless post-script that wrote the `.c` file |
+| `../tools/macho.py` | Minimal Mach-O reader: read constants and tables at virtual addresses |
+| `../tools/extract_function.py` | Print functions from the decompilation by address or name |
+| `../tools/binhex.py` | BinHex 4.0 decoder (for `Nautilus_Bundle.hqx`) |
+| `../tools/pef_unpack_data.py` | Expands the pattern-initialised data section of a PEF (OS 9 build) |
 | `original_binaries/Riverrun-1.0-MAS-OS9.pef` | The Mac OS 9 MAS plug-in, Nautilus Bundle 1.0 (§15) |
-| `tools/pef_unpack_data.py` | Expands the pattern-initialised data section of a PEF (OS 9 build) |
+| `../tools/pef_unpack_data.py` | Expands the pattern-initialised data section of a PEF (OS 9 build) |
 | `original_binaries/Riverrun-1.0-MAS-OS9.pef` | The Mac OS 9 MAS plug-in, Nautilus Bundle 1.0 (§15) |
+| `../tools/annotate_asm.py` | Resolves PIC constants (`k(%ebx)`) in `otool` output |
+| `../tools/mission_emu.py` | Shared Unicorn harness used by the later plug-ins |
 | `tools/emulate_riverrun.py` | **Runs the original Riverrun DSP under Unicorn** (see §11) |
 | `tools/differential_test.py` | 57 scenarios: original (emulated) vs Rust, compared bit for bit |
 | `ui/` | The original panel, about box and assets, for reference |
@@ -43,7 +45,7 @@ Mach-O; the i386 VST slice was chosen because it is the smallest and x86 SSE
 code decompiles far more faithfully than PowerPC. The demo and the full VST
 binaries differ only in the authorisation code.
 
-**Mac OS 9 version.** `Nautilus_Bundle.hqx` decodes (`tools/binhex.py`) to a
+**Mac OS 9 version.** `Nautilus_Bundle.hqx` decodes (`../tools/binhex.py`) to a
 StuffIt 5 archive holding *Nautilus Bundle™ Installer*, an **Installer VISE**
 (MindVision, `SVCT`) package that no public tool unpacks. The installed OS 9
 files were later recovered separately (`reference/macos9/`); see §15 and §16.
@@ -75,7 +77,7 @@ The UI classes kept their names (`RiverrunWaveform`, `RiverrunSliderGrainSpeed`,
 
 1. `analyzeHeadless` + `tools/DecompileAll.java` → `decompiled/…c`.
 2. Constants and static tables were read from the file at their virtual
-   address (`tools/macho.py`). Position-independent code addresses them as
+   address (`../tools/macho.py`). Position-independent code addresses them as
    `ebx + k` after a `call/pop` thunk, so each needs the right `ebx`.
 3. **Every hot path was re-read in the disassembly** (`otool -tvV`), because
    Ghidra misrepresents some conversions. Example: the per-grain envelope index
@@ -305,8 +307,8 @@ Requirements: `pip install unicorn capstone`, and macOS `otool` (stub table).
 ```bash
 # decompile
 analyzeHeadless /tmp/proj rr -import original_binaries/Riverrun-2.6.4-VST-i386 \
-    -scriptPath tools -postScript DecompileAll.java out.c
-python3 tools/extract_function.py out.c 0001adda          # Run
+    -scriptPath ../tools -postScript DecompileAll.java out.c
+python3 ../tools/extract_function.py out.c 0001adda          # Run
 otool -tvV original_binaries/Riverrun-2.6.4-VST-i386 | less
 
 # prove the port
@@ -323,7 +325,7 @@ image the user recovered) is a PowerPC PEF for MOTU's MAS 2.1 / Digital
 Performer 2.7. Unlike 2.6.4 it is **not obfuscated**: method names such as
 `GrainEngine`, `RiverRunEffectProc`, `GetPitch`, `GetGrainLength`,
 `RiverRunCyclicBuffer` sit in its (pattern-initialised) data section —
-`tools/pef_unpack_data.py` expands it. Ghidra 12 loads it with
+`../tools/pef_unpack_data.py` expands it. Ghidra 12 loads it with
 `-processor PowerPC:BE:32:default` (it guesses VLE otherwise).
 
 Searching the unpacked data for every table and constant of 2.6.4:

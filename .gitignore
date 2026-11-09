@@ -4,3 +4,4 @@ target/
 *.aif
 *.aiff
 *.f32
+__pycache__/

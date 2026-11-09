@@ -11,7 +11,7 @@
 //!
 //! `process_block(n)` is one call of the original `Process(in, out, n)`.
 
-pub mod agc;
+pub use mission::agc;
 pub mod envelope;
 pub mod ring;
 pub mod tables;
@@ -226,7 +226,7 @@ impl Engine {
             last_host_pos: 0,
             stereo_k: 0.0,
             beat_sync: BeatSync::Original,
-            agc: Agc::new(sr),
+            agc: Agc::riverrun(sr),
             rec_tmp: vec![0.0; 8192],
 
             out_pos: 0,
@@ -550,7 +550,7 @@ impl Engine {
     pub fn render(&mut self, out_l: &mut [f32], out_r: &mut [f32]) {
         self.buses[0].get_and_clear(out_l);
         self.buses[1].get_and_clear(out_r);
-        self.agc.process(out_l, out_r);
+        self.agc.process_stereo(out_l, out_r);
         let k = self.stereo_k;
         for (l, r) in out_l.iter_mut().zip(out_r.iter_mut()) {
             let (a, b) = (*l, *r);

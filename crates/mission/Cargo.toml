@@ -1,0 +1,10 @@
+[package]
+name = "mission"
+description = "Pieces of Audio Ease's \"Mission\" plug-in framework shared by the Nautilus Bundle (AGC / look-ahead limiter)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]

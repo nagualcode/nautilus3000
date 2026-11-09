@@ -18,7 +18,7 @@ Each one is rebuilt from the original machine code, in Rust, with the
 | Plug-in | What it was | Status |
 |---|---|---|
 | **Riverrun** | real-time granular synthesizer, "by the maker of Thonk" | ✅ engine bit-identical to the original; plug-in, UI, CLI |
-| Deep Phase Nine | 24-notch phaser with look-ahead limiter | planned |
+| **Deep Phase Nine** | 24-notch phaser with look-ahead limiter | ✅ engine bit-identical to the original; plug-in, UI |
 | PeriScope | 32-band phase-correct zoomable EQ with spectroscope | planned |
 
 ---
@@ -106,6 +106,34 @@ riverrun-render --list                                    # envelopes, grids, pr
 About 1000× real time; the heaviest setting of all (2000 grains/s of one-second
 grains, ~1000 layers — "can easily crash a G3 or G4") runs at 60×.
 
+## Deep Phase Nine
+
+![Deep Phase Nine, modern theme](docs/deepphasenine.png)
+
+> *A true phaser that offers unprecedented control and visual feedback. Sweep
+> up to 24 notches per channel with a versatile LFO while Deep Phase Nine plots
+> their motion in real time.* — Audio Ease
+
+Up to 24 second-order all-pass sections per channel, swept by an LFO between
+**Low** and **High**: Sine, Triangle, Sample & Hold, and two **one-shots** that
+travel to a socket and stay. **Feedback** sharpens notches (positive) or peaks
+(negative) up to self-oscillation, kept in check by the original look-ahead
+peak limiter; **Spread** widens the notches; **Stereo offset** moves the right
+channel's notches (red) away from the left's (yellow); **Sync to beats** turns
+the speed into note values (1/32 notes to 32 bars, with dotted and triplet values).
+Drag the yellow ball to move the notches by hand; alt-drag places a one-shot's
+socket. MIDI: a note sets the notch count (`note mod 24 + 1`).
+
+**Bit for bit**: 39 scenarios — every LFO shape, 1 to 24 notches, extreme
+feedback, spread and ranges, one-shots, sync, mono / mono→stereo / stereo,
+host blocks of 64 to 1024, 44.1/48/96 kHz — render identical output to the
+original machine code. Its quirks are kept too: a control rate of 123 samples,
+a left channel whose feedback is smoothed and a right one whose isn't, and an
+LFO that is written into a parameter and read back. Details in
+**[reverse_engineering/deepphasenine](reverse_engineering/deepphasenine/README.md)**.
+
+![Deep Phase Nine, classic theme](docs/deepphasenine-classic.png)
+
 ## Build
 
 Requirements: Rust 1.85+, macOS 12+ (Linux and Windows builds are untested so
@@ -115,13 +143,15 @@ far), and [`cargo-truce`](https://github.com/truce-audio/truce).
 cargo test --release                                  # unit + plug-in tests
 cargo run --release -p riverrun --bin riverrun-standalone
 cargo truce install --clap --vst3 --au2 --user        # into ~/Library/Audio/Plug-Ins
-auval -v aumf RvRn JdSn                               # passes
+auval -v aumf RvRn JdSn && auval -v aumf DPh9 JdSn    # both pass
 ```
 
 ## Repository
 
 ```
 nautilusbundle/
+├── crates/mission/        # the Audio Ease "Mission" pieces shared by all three (AGC / limiter)
+├── plugins/deepphasenine/ # engine.rs (phaser + process), params, editor, dpn-render
 ├── plugins/riverrun/src/
 │   ├── engine/            # the translated engine: mod.rs (Process + Run), ring.rs,
 │   │                      #   envelope.rs, agc.rs, tables.rs
@@ -131,6 +161,8 @@ nautilusbundle/
 │   ├── audio.rs, demo.rs  # WAV/AIFF I/O, the demo voice
 │   └── bin/riverrun_render.rs
 ├── reference/             # the original material: macos9/, macosX/, review, web pages
+├── reverse_engineering/tools/   # Ghidra script, Mach-O / PEF / BinHex helpers, asm annotator, Unicorn harness
+├── reverse_engineering/deepphasenine/
 ├── reverse_engineering/riverrun/
 │   ├── README.md          # the write-up
 │   ├── original_binaries/ # i386 + ppc slices of Riverrun.vst 2.6.4, resources

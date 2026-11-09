@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["plugins/riverrun"]
+members = ["crates/mission", "plugins/riverrun", "plugins/deepphasenine"]
 
 [workspace.package]
 version = "0.1.0"
@@ -27,6 +27,7 @@ clap-sys = "0.5"
 egui = "0.34"
 hound = "3.5"
 rfd = "0.15"
+mission = { path = "crates/mission" }
 serde_json = "1"
 
 [profile.release]

@@ -47,6 +47,7 @@ truce-loader = { workspace = true }
 truce-egui = { workspace = true }
 egui = { workspace = true }
 hound = { workspace = true }
+mission = { workspace = true }
 rfd = { workspace = true }
 serde_json = { workspace = true }
 

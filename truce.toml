@@ -15,3 +15,15 @@ au_tag = "Granular"
 vst3_subcategory = "Fx"
 au3_name = "Riverrun (AUv3)"
 midi_input = true
+
+[[plugin]]
+name = "Deep Phase Nine"
+bundle_id = "deepphasenine"
+crate = "deepphasenine"
+category = "effect"
+fourcc = "DPh9"
+au3_subtype = "DP93"
+au_tag = "Modulation"
+vst3_subcategory = "Fx|Modulation"
+au3_name = "Deep Phase Nine (AUv3)"
+midi_input = true
