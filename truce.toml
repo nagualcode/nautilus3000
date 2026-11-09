@@ -1,0 +1,17 @@
+[vendor]
+name = "Jardim Sonoro"
+id = "com.jardimsonoro"
+url = "https://github.com/nagualcode/nautilusbundle"
+au_manufacturer = "JdSn"
+
+[[plugin]]
+name = "Riverrun"
+bundle_id = "riverrun"
+crate = "riverrun"
+category = "effect"
+fourcc = "RvRn"
+au3_subtype = "RvR3"
+au_tag = "Granular"
+vst3_subcategory = "Fx"
+au3_name = "Riverrun (AUv3)"
+midi_input = true
