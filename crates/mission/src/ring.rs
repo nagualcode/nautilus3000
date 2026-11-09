@@ -1,5 +1,5 @@
-//! The circular buffer used everywhere in Riverrun (class `ekmdvrkalxdgqoeajnnmnqbvjhvlvgw`
-//! in the obfuscated binary, methods at 0x27ba–0x3580).
+//! The circular buffer of the Mission framework (class `ekmdvrkalxdgqoeajnnmnqbvjhvlvgw` in
+//! every obfuscated Nautilus binary; Riverrun's methods at 0x27ba–0x3580).
 //!
 //! It has an independent put and get position. Every method re-normalises its
 //! position the way the original does: positions below the length are pulled up
@@ -53,6 +53,18 @@ impl Ring {
     #[inline]
     pub fn set_get(&mut self, pos: i32) {
         self.get = wrap(pos, self.len);
+    }
+
+    /// `OffsetGetPos`.
+    #[inline]
+    pub fn offset_get(&mut self, delta: i32) {
+        self.get = wrap(self.get.wrapping_add(delta), self.len);
+    }
+
+    /// `AddFast(float*, long)`: sum in at the put position, advance it
+    /// (the same as [`Ring::add_grain`]).
+    pub fn add_fast(&mut self, src: &[f32]) {
+        self.add_grain(src);
     }
 
     /// `Put(float*, long)` @ 0x2cb0: copy in at the put position, advance it.

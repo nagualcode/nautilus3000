@@ -1,12 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["crates/mission", "plugins/riverrun", "plugins/deepphasenine"]
+members = ["crates/mission", "plugins/riverrun", "plugins/deepphasenine", "plugins/periscope"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/nagualcode/nautilusbundle"
+repository = "https://github.com/nagualcode/nautilus3000"
 authors = ["Jardim Sonoro", "nagualcode"]
 
 [workspace.dependencies]

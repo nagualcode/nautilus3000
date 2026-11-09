@@ -290,8 +290,8 @@ fn panel(ui: &mut egui::Ui, fill: Color32, size: egui::Vec2, add: impl FnOnce(&m
 fn top_bar(ui: &mut egui::Ui, ctx: &Ctx, p: &Palette, classic: bool) {
     let params = ctx.params().clone();
     ui.horizontal_centered(|ui| {
-        ui.label(egui::RichText::new("★★★ R I V E R R U N").size(16.0).strong().color(p.text));
-        ui.label(egui::RichText::new("real-time granular synthesizer · Nautilus Bundle").size(10.5).color(p.dim));
+        ui.label(egui::RichText::new("★★★ R I V E R R U N  3K").size(16.0).strong().color(p.text));
+        ui.label(egui::RichText::new("real-time granular synthesizer · nautilus3000").size(10.5).color(p.dim));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             if pill(ui, p, if classic { "Classic" } else { "Modern" }, false).on_hover_text("Theme").clicked() {
                 if let Ok(mut t) = params.theme.write() {

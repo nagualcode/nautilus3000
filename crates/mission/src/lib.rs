@@ -4,3 +4,6 @@
 //! AGC / look-ahead peak limiter below.
 
 pub mod agc;
+pub mod denormal;
+pub mod fft;
+pub mod ring;

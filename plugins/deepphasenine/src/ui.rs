@@ -182,8 +182,8 @@ pub fn dpn_ui(ui: &mut egui::Ui, ctx: &Ctx) {
         .frame(egui::Frame::NONE.fill(p.header).inner_margin(egui::Margin::symmetric(12, 8)))
         .show_inside(ui, |ui| {
             ui.horizontal_centered(|ui| {
-                ui.label(egui::RichText::new("DEEP PHASE NINE").size(16.0).strong().italics().color(p.text));
-                ui.label(egui::RichText::new("syncable 24-notch true deep phaser · Nautilus Bundle").size(10.5).color(p.dim));
+                ui.label(egui::RichText::new("DEEP PHASE NINE 3K").size(16.0).strong().italics().color(p.text));
+                ui.label(egui::RichText::new("syncable 24-notch true deep phaser · nautilus3000").size(10.5).color(p.dim));
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if pill(ui, &p, if classic { "Classic" } else { "Modern" }, false).on_hover_text("Theme").clicked() {
                         if let Ok(mut t) = params.theme.write() {

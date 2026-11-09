@@ -13,7 +13,7 @@
 
 pub use mission::agc;
 pub mod envelope;
-pub mod ring;
+pub use mission::ring;
 pub mod tables;
 
 use agc::Agc;

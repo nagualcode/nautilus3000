@@ -1,29 +1,41 @@
 [vendor]
 name = "Jardim Sonoro"
 id = "com.jardimsonoro"
-url = "https://github.com/nagualcode/nautilusbundle"
+url = "https://github.com/nagualcode/nautilus3000"
 au_manufacturer = "JdSn"
 
 [[plugin]]
-name = "Riverrun"
-bundle_id = "riverrun"
+name = "RiverRun3K"
+bundle_id = "riverrun3k"
 crate = "riverrun"
 category = "effect"
 fourcc = "RvRn"
 au3_subtype = "RvR3"
 au_tag = "Granular"
 vst3_subcategory = "Fx"
-au3_name = "Riverrun (AUv3)"
+au3_name = "RiverRun3K (AUv3)"
 midi_input = true
 
 [[plugin]]
-name = "Deep Phase Nine"
-bundle_id = "deepphasenine"
+name = "DeepPhaseNine3K"
+bundle_id = "deepphasenine3k"
 crate = "deepphasenine"
 category = "effect"
 fourcc = "DPh9"
 au3_subtype = "DP93"
 au_tag = "Modulation"
 vst3_subcategory = "Fx|Modulation"
-au3_name = "Deep Phase Nine (AUv3)"
+au3_name = "DeepPhaseNine3K (AUv3)"
+midi_input = true
+
+[[plugin]]
+name = "Periscope3K"
+bundle_id = "periscope3k"
+crate = "periscope"
+category = "effect"
+fourcc = "PScp"
+au3_subtype = "PSc3"
+au_tag = "EQ"
+vst3_subcategory = "Fx|EQ"
+au3_name = "Periscope3K (AUv3)"
 midi_input = true
